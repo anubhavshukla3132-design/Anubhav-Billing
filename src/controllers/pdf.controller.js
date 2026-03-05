@@ -9,35 +9,38 @@ async function generatePDF(req, res) {
 
     const html = generateMedicalBillHTML(data);
 
-    browser = await chromium.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    const browser = await chromium.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+      ],
     });
 
     const page = await browser.newPage();
 
     await page.setContent(html, {
-      waitUntil: "networkidle"
+      waitUntil: "networkidle",
     });
 
     const pdfBuffer = await page.pdf({
       format: "A4",
-      printBackground: true
+      printBackground: true,
     });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=bill-${Date.now()}.pdf`
+      `attachment; filename=bill-${Date.now()}.pdf`,
     );
 
     res.send(pdfBuffer);
-
   } catch (error) {
     console.error("PDF generation error:", error);
     res.status(500).json({
-      error: "PDF generation failed"
+      error: "PDF generation failed",
     });
-
   } finally {
     if (browser) {
       await browser.close();
