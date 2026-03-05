@@ -7,25 +7,6 @@ The project includes:
 - A responsive billing dashboard
 - Server-side PDF generation using Playwright + Chromium
 
-## Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [How It Works](#how-it-works)
-- [Project Structure](#project-structure)
-- [Prerequisites](#prerequisites)
-- [Installation and Local Setup](#installation-and-local-setup)
-- [Environment Variables](#environment-variables)
-- [Usage Guide](#usage-guide)
-- [API Reference](#api-reference)
-- [PDF Data Model](#pdf-data-model)
-- [Scripts](#scripts)
-- [Deployment Notes](#deployment-notes)
-- [Troubleshooting](#troubleshooting)
-- [Known Limitations](#known-limitations)
-- [Recommended Improvements](#recommended-improvements)
-- [License](#license)
-
 ## Overview
 Anubhav Medical Billing is a Node.js + Express application that serves a billing dashboard and generates printable A4 medical bill PDFs.
 
