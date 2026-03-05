@@ -1,5 +1,4 @@
 const { chromium } = require("playwright");
-const { generateMedicalBillHTML } = require("../utils/billHtml");
 
 async function generatePDF(req, res) {
   let browser;
