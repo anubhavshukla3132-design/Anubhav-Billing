@@ -1,14 +1,14 @@
 const { chromium } = require("playwright");
+const { generateMedicalBillHTML } = require("../templates/medical-bill.template");
 
 async function generatePDF(req, res) {
   let browser;
 
   try {
     const data = req.body;
-
     const html = generateMedicalBillHTML(data);
 
-    const browser = await chromium.launch({
+    browser = await chromium.launch({
       headless: true,
       args: [
         "--no-sandbox",
