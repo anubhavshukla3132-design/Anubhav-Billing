@@ -36,6 +36,6 @@ app.get('/', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-app.use('/api', requireAuth, pdfRoutes);
-
+ app.use('/api', requireAuth, pdfRoutes);
+ 
 module.exports = app;
