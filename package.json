@@ -4,8 +4,8 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
-    "build": "npx playwright install chromium"
+    "start": "PLAYWRIGHT_BROWSERS_PATH=0 node server.js",
+    "build": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium"
   },
   "dependencies": {
     "dotenv": "^17.3.1",
