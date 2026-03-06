@@ -178,7 +178,7 @@ function resetForm() {
     if (el.id === "storeName") el.value = "KRISHNA MEDICAL STORE";
     else if (el.id === "storeTagline") el.value = "Shop No. CP-1, LGF-22, Jeevan Plaza";
     else if (el.id === "storeAddress") el.value = "Vipul Khand-2, Gomti Nagar, Lucknow - 226010";
-    else if (el.id === "storePhone") el.value = "Phone: +91 7355031666";
+    else if (el.id === "storePhone") el.value = "Phone: +91 9559953132";
     else if (el.id === "storeEmail") el.value = "Email: krishnamedicalstoregtl@gmail.com";
     else if (el.id === "gstin") el.value = "09FICPP4622N1ZR";
     else if (el.id === "drugLicense1") el.value = "UP32200005490";

@@ -238,7 +238,7 @@ function generateMedicalBillHTML(data) {
                 <h1>${esc(data.storeName || "KRISHNA MEDICAL STORE")}</h1>
                 <div class="store-subline">${esc(data.storeTagline || "SHOP NO.CP-1/LGF-22 JEEVAN PLAZA")}</div>
                 <div class="store-subline">${esc(data.storeAddress || "VIPUL KHAND-2 GOMTINAGAR LUCKNOW-226010")}</div>
-                <div class="store-subline">${esc(data.storePhone || "Phone  : 7355031166")}</div>
+                <div class="store-subline">${esc(data.storePhone || "Phone  : 9559953132")}</div>
                 <div class="store-subline">${esc(data.storeEmail || "Email  : krishnamedicalstoregmt@gmil.com")}</div>
               </div>
               <div class="store-right">
