@@ -4,8 +4,8 @@
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "PLAYWRIGHT_BROWSERS_PATH=0 node server.js",
-    "build": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium"
+    "start": "node server.js",
+    "postinstall": "npx playwright install chromium"
   },
   "dependencies": {
     "cors": "^2.8.5",
