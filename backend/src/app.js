@@ -11,9 +11,11 @@ app.set('trust proxy', 1);
 const FRONTEND_ORIGIN =
   process.env.FRONTEND_ORIGIN ||
   process.env.CLIENT_ORIGIN ||
-  "http://localhost:5173";
+  // Render frontend + local dev fallback
+  "https://anubhav-billing.onrender.com,http://localhost:5173";
 const sessionSecret =
   process.env.SESSION_SECRET || "adarsh-billing-secret-key-2026";
+const isProd = process.env.NODE_ENV === "production";
 
 app.use(
   cors({
@@ -35,8 +37,8 @@ app.use(
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: "none",
-      secure: true,
+      sameSite: isProd ? "none" : "lax",
+      secure: isProd,
     },
   }),
 );

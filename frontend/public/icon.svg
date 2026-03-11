@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title>Anubhav Billing</title>
+  <desc>Simple monogram icon for the Anubhav Medical Billing PWA.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="1" y2="0">
+      <stop offset="0" stop-color="#0f766e" />
+      <stop offset="1" stop-color="#10b981" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#g)" />
+  <g fill="none" stroke="#f8fafc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 92V36h24c16 0 24 8 24 18s-8 18-24 18H36" />
+    <path d="M78 74l14 18" />
+  </g>
+</svg>

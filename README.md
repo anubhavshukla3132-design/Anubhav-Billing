@@ -36,6 +36,19 @@ npm install
 npm run dev             # Vite dev server on http://localhost:5173
 ```
 
+### PWA install
+- Build once (`npm run build`) or run dev.
+- Open the app in Chrome/Edge (http://localhost:5173) and use "Install app" / "Add to Home Screen" to pin the installable web app shell. Offline precaches the UI; API calls still require network + a valid session.
+
+### Deploying to Render
+- Frontend (static): `cd frontend && npm install && npm run build`; point Render Static Site to `frontend/dist`.
+- Backend (web service): set env vars
+  - `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SESSION_SECRET`
+  - `FRONTEND_ORIGIN=https://anubhav-billing.onrender.com`
+  - `NODE_ENV=production`
+  - `PORT` (Render provides one via `PORT`, app already uses it)
+- Production cookies are `secure` + `sameSite=none`; keep frontend/backend on HTTPS.
+
 API base: defaults to `http://localhost:3000`. Override in `frontend/index.html`:
 ```html
 <script>window.__API_BASE__ = "https://your-backend.example.com";</script>
