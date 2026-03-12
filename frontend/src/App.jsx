@@ -1,7 +1,106 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard.jsx';
 import Login from './pages/Login.jsx';
+
+const API_BASE =
+  (typeof window !== 'undefined' && window.__API_BASE__) ||
+  'https://anubhav-billing-1jso.onrender.com';
+
+function useServerStatus() {
+  const [status, setStatus] = useState('checking'); // checking | waiting | ready
+
+  useEffect(() => {
+    let timer;
+    let cancelled = false;
+
+    async function ping() {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(`${API_BASE}/health`, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (res.ok) {
+          if (!cancelled) setStatus('ready');
+          return;
+        }
+      } catch (_err) {
+        // Ignore and retry below.
+      }
+
+      if (cancelled) return;
+      setStatus('waiting');
+      timer = setTimeout(ping, 2500);
+    }
+
+    ping();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
+  return status;
+}
+
+function WaitingScreen({ message = 'Server start ho raha hai, kripya kuch der rukें…' }) {
+  return (
+    <div className="server-wait-shell">
+      <div className="server-wait-card">
+        <div className="ping-dot" />
+        <h2>Server boot हो रहा है</h2>
+        <p>{message}</p>
+        <small>जैसे ही server ready होगा, आपको login page पर ले जाया जाएगा।</small>
+      </div>
+    </div>
+  );
+}
+
+function ProtectedDashboard() {
+  const status = useServerStatus();
+  const navigate = useNavigate();
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    if (status !== 'ready') return;
+    let cancelled = false;
+    let retryTimer;
+
+    async function checkSession() {
+      if (cancelled) return;
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+        if (cancelled) return;
+        if (res.status === 401) {
+          navigate('/login', { replace: true });
+          return;
+        }
+        if (!res.ok) throw new Error('Failed to load session');
+        setAuthReady(true);
+      } catch (_err) {
+        if (cancelled) return;
+        // Retry quickly in case server just came up.
+        retryTimer = setTimeout(checkSession, 1500);
+      }
+    }
+
+    checkSession();
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [status, navigate]);
+
+  if (status !== 'ready') return <WaitingScreen />;
+  if (!authReady) return <WaitingScreen message="Session check हो रहा है…" />;
+  return <Dashboard />;
+}
+
+function LoginGate() {
+  const status = useServerStatus();
+  if (status !== 'ready') return <WaitingScreen />;
+  return <Login />;
+}
 
 function InstallPrompt() {
   const [promptEvent, setPromptEvent] = React.useState(null);
@@ -60,8 +159,8 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/login" element={<LoginGate />} />
+        <Route path="/" element={<ProtectedDashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <InstallPrompt />
