@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard.jsx';
 import Login from './pages/Login.jsx';
+import Records from './pages/Records.jsx';
 
 const API_BASE =
   (typeof window !== 'undefined' && window.__API_BASE__) ||
@@ -54,7 +55,7 @@ function WaitingScreen({ message = 'Server is starting, please wait a moment…'
   );
 }
 
-function ProtectedDashboard() {
+function ProtectedRoute({ element: Element }) {
   const status = useServerStatus();
   const navigate = useNavigate();
   const [authReady, setAuthReady] = useState(false);
@@ -90,7 +91,7 @@ function ProtectedDashboard() {
 
   if (status !== 'ready') return <WaitingScreen />;
   if (!authReady) return <WaitingScreen message="Checking session…" />;
-  return <Dashboard />;
+  return <Element />;
 }
 
 function LoginGate() {
@@ -195,10 +196,10 @@ function App() {
     <>
       <Routes>
         <Route path="/login" element={<LoginGate />} />
-        <Route path="/" element={<ProtectedDashboard />} />
+        <Route path="/" element={<ProtectedRoute element={Dashboard} />} />
+        <Route path="/records" element={<ProtectedRoute element={Records} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <InstallPrompt />
     </>
   );
 }

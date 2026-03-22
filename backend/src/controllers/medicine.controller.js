@@ -44,7 +44,56 @@ const addMedicine = async (req, res) => {
   }
 };
 
+// @desc    Get all medicines (list)
+// @route   GET /api/medicines
+// @access  Private
+const getMedicines = async (req, res) => {
+  try {
+    const { search = "" } = req.query;
+    let query = {};
+    if (search) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+    const medicines = await Medicine.find(query).sort({ name: 1 });
+    res.status(200).json(medicines);
+  } catch (error) {
+    console.error('Error fetching medicines:', error);
+    res.status(500).json({ error: 'Failed to fetch medicines' });
+  }
+};
+
+// @desc    Update a medicine
+// @route   PUT /api/medicines/:id
+// @access  Private
+const updateMedicine = async (req, res) => {
+  try {
+    const updated = await Medicine.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ error: 'Medicine not found' });
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error('Error updating medicine:', error);
+    res.status(500).json({ error: 'Failed to update medicine' });
+  }
+};
+
+// @desc    Delete a medicine
+// @route   DELETE /api/medicines/:id
+// @access  Private
+const deleteMedicine = async (req, res) => {
+  try {
+    const deleted = await Medicine.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Medicine not found' });
+    res.status(200).json({ message: 'Medicine deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting medicine:', error);
+    res.status(500).json({ error: 'Failed to delete medicine' });
+  }
+};
+
 module.exports = {
   searchMedicines,
-  addMedicine
+  addMedicine,
+  getMedicines,
+  updateMedicine,
+  deleteMedicine
 };

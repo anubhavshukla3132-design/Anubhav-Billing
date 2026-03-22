@@ -112,7 +112,17 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    fetchNextBillNo();
+    const saved = localStorage.getItem('invoice_form');
+    let hasSavedBillNo = false;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.billNo) hasSavedBillNo = true;
+      } catch (e) {}
+    }
+    if (!hasSavedBillNo) {
+      fetchNextBillNo();
+    }
   }, []);
 
   useEffect(() => {
@@ -320,6 +330,9 @@ function Dashboard() {
           </div>
         </div>
         <div className="toolbar-right">
+          <button className="btn btn-store" onClick={() => navigate('/records')}>
+            Records
+          </button>
           <button className="btn btn-store" onClick={() => setStorePanelOpen(true)}>
             Store Details
           </button>

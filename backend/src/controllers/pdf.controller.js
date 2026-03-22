@@ -43,20 +43,32 @@ async function generatePDF(req, res) {
         }
 
         const invoiceNumber = data.billNo || `INV-${Date.now()}`;
-        await Bill.create({
-          invoiceNumber,
-          patient: patient._id,
-          items: (data.items || []).map(i => ({
-            name: i.productName || "Item",
-            quantity: Number(i.quantity) || 1,
-            price: Number(i.mrp) || 0,
-            total: Number(i.amount) || 0
-          })),
-          subtotal: Number(amount) || 0,
-          finalTotal: Number(amount) || 0,
-          upiQrCodeUrl,
-          createdBy: req.session?.user?.username || "Admin"
-        });
+        await Bill.findOneAndUpdate(
+          { invoiceNumber },
+          {
+            invoiceNumber,
+            patient: patient._id,
+            billDate: data.billDate || "",
+            doctorName: data.doctorName || "",
+            prescription: data.prescription || "",
+            items: (data.items || []).filter(i => i.productName && i.productName.trim() !== "").map(i => ({
+              name: i.productName,
+              packing: i.packing || "",
+              batchNo: i.batchNo || "",
+              exp: i.exp || "",
+              quantity: Number(i.quantity) || 1,
+              mrp: Number(i.mrp) || 0,
+              discount: Number(i.discount) || 0,
+              price: Number(i.mrp) || 0,
+              total: Number(i.amount) || 0
+            })),
+            subtotal: Number(amount) || 0,
+            finalTotal: Number(amount) || 0,
+            upiQrCodeUrl,
+            createdBy: req.session?.user?.username || "Admin"
+          },
+          { upsert: true, new: true }
+        );
       } catch (dbErr) {
         console.error("Failed to save bill to DB:", dbErr.message);
       }
