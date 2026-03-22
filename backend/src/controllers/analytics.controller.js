@@ -36,7 +36,7 @@ const getAnalytics = async (req, res) => {
     const lowStockPromise = Medicine.find({ stock: { $lt: 20 } }).select('name stock price').sort({ stock: 1 }).limit(10);
 
     // 3. Recent 5 Bills
-    const recentBillsPromise = Bill.find().sort({ createdAt: -1 }).limit(5).select('billNo patientName finalTotal createdAt');
+    const recentBillsPromise = Bill.find().sort({ createdAt: -1 }).limit(5).populate('patient', 'name').lean();
 
     // 4. Top 5 Medicines
     const topMedicinesPromise = Bill.aggregate([
@@ -59,7 +59,13 @@ const getAnalytics = async (req, res) => {
         allTime: rev.total[0] ? rev.total[0].total : 0,
       },
       lowStock,
-      recentBills,
+      recentBills: recentBills.map(b => ({
+        _id: b._id,
+        billNo: b.invoiceNumber,
+        patientName: b.patient ? b.patient.name : 'Walk-in',
+        finalTotal: b.finalTotal,
+        createdAt: b.createdAt
+      })),
       topMedicines
     });
 
