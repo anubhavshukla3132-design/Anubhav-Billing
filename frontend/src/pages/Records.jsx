@@ -236,6 +236,16 @@ function Records() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (e) {}
+    navigate('/login', { replace: true });
+  };
+
   return (
     <div>
       <header className="toolbar">
@@ -246,9 +256,12 @@ function Records() {
             <p>Overview & Management</p>
           </div>
         </div>
-        <div className="toolbar-right">
+        <div className="toolbar-right" style={{ display: 'flex', gap: '10px' }}>
           <button className="btn btn-primary" onClick={() => navigate('/billing')}>
             + Create New Bill
+          </button>
+          <button className="btn btn-muted" onClick={handleLogout}>
+            Sign Out
           </button>
         </div>
       </header>

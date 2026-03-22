@@ -552,12 +552,12 @@ tbody td input {
   }
 
   .toolbar-right {
-    gap: 6px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .toolbar-right .btn {
-    flex: 1 1 calc(50% - 6px);
-    min-width: 140px;
+    flex: 1 1 auto;
   }
 
   .brand h1 {
@@ -574,7 +574,7 @@ tbody td input {
   }
 
   table {
-    min-width: 0;
+    min-width: 0 !important;
     display: block;
   }
 
@@ -688,6 +688,15 @@ tbody td input {
   input,
   textarea {
     font-size: 15px;
+  }
+
+  .pdf-popup-card {
+    padding: 24px 20px;
+    width: 94%;
+  }
+
+  .pdf-popup-actions {
+    flex-direction: column;
   }
 }
 
