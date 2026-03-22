@@ -113,8 +113,8 @@ function Records() {
         items.push(blankItem());
       }
 
-      localStorage.setItem('invoice_form', JSON.stringify(form));
-      localStorage.setItem('invoice_items', JSON.stringify(items));
+      sessionStorage.setItem('invoice_form', JSON.stringify(form));
+      sessionStorage.setItem('invoice_items', JSON.stringify(items));
       navigate('/billing');
     } catch (e) {
       console.error(e);
