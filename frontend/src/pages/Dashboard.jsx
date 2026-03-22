@@ -39,7 +39,8 @@ const blankItem = () => ({
   mrp: '',
   discount: '',
   amount: '',
-  manual: false
+  manual: false,
+  stock: null
 });
 
 function unitsPerPack(packing) {
@@ -188,6 +189,10 @@ function Dashboard() {
         if (['packing', 'quantity', 'mrp', 'discount'].includes(field)) {
           next.amount = computeAmount(next);
         }
+        // If the user manually changes the productName, un-link the stock to prevent stale data
+        if (field === 'productName' && value !== item.productName) {
+          next.stock = null;
+        }
         return next;
       })
     );
@@ -233,6 +238,7 @@ function Dashboard() {
     updateItem(idx, 'packing', med.packing || '10 T'); 
     updateItem(idx, 'batchNo', med.batchNo || 'B-01');
     updateItem(idx, 'exp', med.exp || '12/26');
+    updateItem(idx, 'stock', med.stock || 0);
     setSuggestions(prev => ({ ...prev, [idx]: [] }));
   };
 
@@ -298,12 +304,36 @@ function Dashboard() {
     }
   };
 
-  const handleKeyDown = (e, idx) => {
-    if (!suggestions[idx] || suggestions[idx].length === 0) return;
+  const handleInputKeyDown = (e, field, idx) => {
+    if (field === 'productName' && suggestions[idx] && suggestions[idx].length > 0) {
+      if (e.key === 'Tab' || e.key === 'Enter') {
+        e.preventDefault();
+        selectMedicine(idx, suggestions[idx][0]);
+        setTimeout(() => document.getElementById(`pack-${idx}`)?.focus(), 50);
+        return;
+      }
+    }
     
-    if (e.key === 'Tab' || e.key === 'Enter') {
+    // Rapid Keyboard Traversal Script
+    if (e.key === 'Enter') {
       e.preventDefault();
-      selectMedicine(idx, suggestions[idx][0]);
+      let nextId = '';
+      if (field === 'productName') nextId = `pack-${idx}`;
+      else if (field === 'packing') nextId = `batch-${idx}`;
+      else if (field === 'batchNo') nextId = `exp-${idx}`;
+      else if (field === 'exp') nextId = `qty-${idx}`;
+      else if (field === 'quantity') nextId = `mrp-${idx}`;
+      else if (field === 'mrp') nextId = `disc-${idx}`;
+      else if (field === 'discount') {
+         if (idx === items.length - 1) {
+           addRow();
+           setTimeout(() => document.getElementById(`prod-${idx + 1}`)?.focus(), 50);
+           return;
+         } else {
+           nextId = `prod-${idx + 1}`;
+         }
+      }
+      setTimeout(() => document.getElementById(nextId)?.focus(), 50);
     }
   };
 
@@ -330,8 +360,8 @@ function Dashboard() {
           </div>
         </div>
         <div className="toolbar-right">
-          <button className="btn btn-store" onClick={() => navigate('/records')}>
-            Records
+          <button className="btn btn-store" onClick={() => navigate('/')}>
+            Store Dashboard
           </button>
           <button className="btn btn-store" onClick={() => setStorePanelOpen(true)}>
             Store Details
@@ -560,11 +590,12 @@ function Dashboard() {
                     </td>
                     <td data-label="Product Name" style={{ position: 'relative' }}>
                       <input
+                        id={`prod-${idx}`}
                         name="productName"
                         autoComplete="off"
                         value={item.productName}
                         onChange={(e) => handleMedicineSearch(idx, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, idx)}
+                        onKeyDown={(e) => handleInputKeyDown(e, 'productName', idx)}
                       />
                       {suggestions[idx] && suggestions[idx].length > 0 && (
                         <div style={{
@@ -584,32 +615,39 @@ function Dashboard() {
                     </td>
                     <td data-label="Packing">
                       <input
+                        id={`pack-${idx}`}
                         name="packing"
                         value={item.packing}
                         onChange={(e) =>
                           updateItem(idx, 'packing', e.target.value)
                         }
+                        onKeyDown={(e) => handleInputKeyDown(e, 'packing', idx)}
                       />
                     </td>
                     <td data-label="Batch No.">
                       <input
+                        id={`batch-${idx}`}
                         name="batchNo"
                         value={item.batchNo}
                         onChange={(e) =>
                           updateItem(idx, 'batchNo', e.target.value)
                         }
+                        onKeyDown={(e) => handleInputKeyDown(e, 'batchNo', idx)}
                       />
                     </td>
                     <td data-label="Exp.">
                       <input
+                        id={`exp-${idx}`}
                         name="exp"
                         placeholder="MM/YY"
                         value={item.exp}
                         onChange={(e) => handleExpChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleInputKeyDown(e, 'exp', idx)}
                       />
                     </td>
-                    <td data-label="Quantity">
+                    <td data-label="Quantity" style={{ position: 'relative' }}>
                       <input
+                        id={`qty-${idx}`}
                         name="quantity"
                         type="number"
                         min="0"
@@ -618,20 +656,30 @@ function Dashboard() {
                         onChange={(e) =>
                           updateItem(idx, 'quantity', e.target.value)
                         }
+                        onKeyDown={(e) => handleInputKeyDown(e, 'quantity', idx)}
+                        style={{ borderColor: typeof item.stock === 'number' && !isNaN(item.stock) && item.stock - (item.quantity || 0) < 0 ? '#ef4444' : undefined, background: typeof item.stock === 'number' && !isNaN(item.stock) && item.stock - (item.quantity || 0) < 0 ? '#fef2f2' : undefined }}
                       />
+                      {typeof item.stock === 'number' && !isNaN(item.stock) && (
+                        <div style={{ fontSize: '11px', marginTop: '4px', color: item.stock - (item.quantity || 0) <= 0 ? '#ef4444' : '#10b981', fontWeight: 700, textAlign: 'center' }}>
+                          {item.stock - (item.quantity || 0) <= 0 ? 'Out of Stock' : `Stock: ${item.stock - (item.quantity || 0)}`}
+                        </div>
+                      )}
                     </td>
                     <td data-label="M.R.P.">
                       <input
+                        id={`mrp-${idx}`}
                         name="mrp"
                         type="number"
                         min="0"
                         step="0.01"
                         value={item.mrp}
                         onChange={(e) => updateItem(idx, 'mrp', e.target.value)}
+                        onKeyDown={(e) => handleInputKeyDown(e, 'mrp', idx)}
                       />
                     </td>
                     <td data-label="Disc.%" style={{ position: 'relative' }}>
                       <input
+                        id={`disc-${idx}`}
                         name="discount"
                         type="number"
                         min="0"
@@ -640,6 +688,7 @@ function Dashboard() {
                         onChange={(e) =>
                           updateItem(idx, 'discount', e.target.value)
                         }
+                        onKeyDown={(e) => handleInputKeyDown(e, 'discount', idx)}
                         style={{ paddingRight: '20px' }}
                       />
                       {item.discount && (

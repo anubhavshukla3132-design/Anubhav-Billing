@@ -50,12 +50,26 @@ const addMedicine = async (req, res) => {
 const getMedicines = async (req, res) => {
   try {
     const { search = "" } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+
     let query = {};
     if (search) {
       query.name = { $regex: search, $options: 'i' };
     }
-    const medicines = await Medicine.find(query).sort({ name: 1 });
-    res.status(200).json(medicines);
+
+    const total = await Medicine.countDocuments(query);
+    const medicines = await Medicine.find(query)
+      .sort({ name: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.status(200).json({
+      data: medicines,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
     console.error('Error fetching medicines:', error);
     res.status(500).json({ error: 'Failed to fetch medicines' });

@@ -196,8 +196,8 @@ function App() {
     <>
       <Routes>
         <Route path="/login" element={<LoginGate />} />
-        <Route path="/" element={<ProtectedRoute element={Dashboard} />} />
-        <Route path="/records" element={<ProtectedRoute element={Records} />} />
+        <Route path="/" element={<ProtectedRoute element={Records} />} />
+        <Route path="/billing" element={<ProtectedRoute element={Dashboard} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

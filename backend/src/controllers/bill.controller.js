@@ -4,6 +4,8 @@ const Bill = require("../models/Bill");
 exports.getBills = async (req, res) => {
   try {
     const { search = "" } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
     
     // Build query
     let query = {};
@@ -16,7 +18,7 @@ exports.getBills = async (req, res) => {
     }
 
     // Fetch bills (populate patient)
-    const bills = await Bill.find(query)
+    let bills = await Bill.find(query)
       .populate({
         path: "patient",
         match: search ? { name: { $regex: search, $options: "i" } } : {},
@@ -24,16 +26,23 @@ exports.getBills = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Filter out bills where patient was filtered out by populate match (if searching)
+    // Filter out bills where patient was filtered out by populate match
     const filteredBills = bills.filter(bill => {
       if (!search) return true;
-      // If invoiceNumber matched, keep it regardless of patient match
       if (bill.invoiceNumber.toLowerCase().includes(search.toLowerCase())) return true;
-      // If invoiceNumber didn't match, patient must have matched
       return bill.patient !== null;
     });
 
-    res.json(filteredBills);
+    // In-memory pagination (required due to cross-collection text searching without complex aggregate)
+    const total = filteredBills.length;
+    const paginatedBills = filteredBills.slice((page - 1) * limit, page * limit);
+
+    res.json({
+      data: paginatedBills,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
     console.error("Error fetching bills:", error);
     res.status(500).json({ error: "Failed to fetch bills" });

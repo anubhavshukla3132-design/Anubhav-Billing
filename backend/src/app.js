@@ -5,6 +5,9 @@ const pdfRoutes = require("./routes/pdf.routes");
 const authRoutes = require("./routes/auth.routes");
 const medicineRoutes = require("./routes/medicine.routes");
 const billRoutes = require("./routes/bill.routes");
+const analyticsRoutes = require("./routes/analytics.routes");
+const patientRoutes = require("./routes/patient.routes");
+const exportRoutes = require("./routes/export.routes");
 const { requireAuth } = require("./middleware/auth.middleware");
 
 const app = express();
@@ -60,6 +63,9 @@ app.use("/auth", authRoutes);
 
 app.use("/api/medicines", medicineRoutes);
 app.use("/api/bills", requireAuth, billRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/patients", patientRoutes);
+app.use("/api/export", exportRoutes);
 app.use("/api", requireAuth, pdfRoutes);
 
 // Friendly root response so direct hits don't show a 404.

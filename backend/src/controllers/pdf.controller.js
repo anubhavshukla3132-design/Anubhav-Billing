@@ -3,6 +3,7 @@ const QRCode = require("qrcode");
 const mongoose = require("mongoose");
 const Bill = require("../models/Bill");
 const Patient = require("../models/Patient");
+const Medicine = require("../models/Medicine");
 const { generateMedicalBillHTML } = require("../templates/medical-bill.template");
 
 async function generatePDF(req, res) {
@@ -43,6 +44,37 @@ async function generatePDF(req, res) {
         }
 
         const invoiceNumber = data.billNo || `INV-${Date.now()}`;
+        
+        // --- Smart Stock Deduction (handles Edits & New Bills) ---
+        const existingBill = await Bill.findOne({ invoiceNumber });
+        const newItems = (data.items || []).filter(i => i.productName && i.productName.trim() !== "");
+        
+        const oldStockMap = {};
+        if (existingBill && existingBill.items) {
+          existingBill.items.forEach(item => {
+             oldStockMap[item.name] = (oldStockMap[item.name] || 0) + item.quantity;
+          });
+        }
+        
+        const newStockMap = {};
+        newItems.forEach(item => {
+             newStockMap[item.productName] = (newStockMap[item.productName] || 0) + (Number(item.quantity) || 1);
+        });
+        
+        const allMedicineNames = new Set([...Object.keys(oldStockMap), ...Object.keys(newStockMap)]);
+        for (const medName of allMedicineNames) {
+           const oldQ = oldStockMap[medName] || 0;
+           const newQ = newStockMap[medName] || 0;
+           const diff = newQ - oldQ; 
+           if (diff !== 0) {
+              await Medicine.updateOne(
+                 { name: new RegExp(`^${medName}$`, 'i') },
+                 { $inc: { stock: -diff } }
+              );
+           }
+        }
+        // --------------------------------------------------------
+
         await Bill.findOneAndUpdate(
           { invoiceNumber },
           {
