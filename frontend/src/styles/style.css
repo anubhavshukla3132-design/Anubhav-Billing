@@ -75,7 +75,7 @@ body {
 
 .brand h1 {
   margin: 0;
-  font-size: clamp(16px, 2.1vw, 18px);
+  font-size: clamp(20px, 2.5vw, 24px);
   color: #0f172a;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -481,17 +481,46 @@ tbody td input {
 }
 
 .tab-nav-container {
+  display: inline-flex;
+  gap: 6px;
+  margin-bottom: 24px;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
+  padding: 6px;
+  background: #f1f5f9;
+  border-radius: 100px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  scrollbar-width: none;
+  max-width: 100%;
 }
 
 .tab-nav-container::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Webkit */
+  display: none;
 }
 
 .tab-nav-container .btn {
   flex-shrink: 0;
   white-space: nowrap;
+  border-radius: 100px;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  box-shadow: none;
+  height: 38px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-nav-container .btn:hover {
+  color: #0f172a;
+}
+
+.tab-nav-container .btn-primary {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04) !important;
+  font-weight: 700;
+  transform: translateY(0) !important;
 }
 
 @media (max-width: 1200px) {
@@ -520,6 +549,11 @@ tbody td input {
     padding: 10px 12px 12px;
     gap: 8px;
     flex-wrap: wrap;
+  }
+
+  .brand {
+    width: 100%;
+    justify-content: center;
   }
 
   .container {
@@ -563,23 +597,37 @@ tbody td input {
   .toolbar {
     position: sticky;
     top: 0;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
   }
 
   .toolbar-right {
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 10px;
+    flex-wrap: nowrap;
+    width: 100%;
   }
 
   .toolbar-right .btn {
     flex: 1 1 auto;
+    padding: 0;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    height: 46px;
+    border-radius: 14px;
   }
 
   .brand h1 {
-    font-size: 16px;
+    font-size: 22px;
   }
 
   .brand p {
-    font-size: 11px;
+    display: none;
   }
 
   .table-wrap {

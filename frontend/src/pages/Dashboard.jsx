@@ -371,13 +371,13 @@ function Dashboard() {
         </div>
         <div className="toolbar-right">
           <button className="btn btn-store" onClick={() => navigate('/')}>
-            Store Dashboard
+            Dashboard
           </button>
           <button className="btn btn-store" onClick={() => setStorePanelOpen(true)}>
-            Store Details
+            Details
           </button>
           <button className="btn btn-logout" onClick={handleLogout}>
-            Sign Out
+            Logout
           </button>
         </div>
       </header>

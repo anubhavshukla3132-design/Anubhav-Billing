@@ -252,16 +252,16 @@ function Records() {
         <div className="brand">
           <img src="/Anubhav.png" alt="Anubhav Billing logo" className="brand-logo" />
           <div className="brand-text">
-            <h1>Store Dashboard</h1>
+            <h1>Dashboard</h1>
             <p>Overview & Management</p>
           </div>
         </div>
         <div className="toolbar-right" style={{ display: 'flex', gap: '10px' }}>
           <button className="btn btn-primary" onClick={() => navigate('/billing')}>
-            + Create New Bill
+            + New Bill
           </button>
           <button className="btn btn-muted" onClick={handleLogout}>
-            Sign Out
+            Logout
           </button>
         </div>
       </header>
@@ -269,7 +269,7 @@ function Records() {
       <main className="container">
         
         {/* Tab Navigation */}
-        <div className="tab-nav-container" style={{ display: 'flex', gap: '10px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '6px' }}>
+        <div className="tab-nav-container">
           <button 
             className={`btn ${activeTab === 'analytics' ? 'btn-primary' : 'btn-muted'}`} 
             onClick={() => { setActiveTab('analytics'); setSelectedPatient(null); }}
@@ -297,16 +297,16 @@ function Records() {
         </div>
 
         <section className="card">
-          <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-            <div>
-              <p className="eyebrow">
+          <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px', marginBottom: '24px' }}>
+            <div style={{ flex: '1 1 auto', minWidth: 'min-content' }}>
+              <p className="eyebrow" style={{ marginBottom: '4px' }}>
                 {activeTab === 'invoices' ? 'Records' : activeTab === 'medicines' ? 'Inventory' : activeTab === 'patients' ? 'CRM' : 'Overview'}
               </p>
-              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <h2>
-                  {activeTab === 'invoices' ? 'Saved Invoices' : activeTab === 'medicines' ? 'Medicines Directory' : activeTab === 'patients' ? 'Patient Profiles' : 'Business Insights'}
-                </h2>
-                
+              <h2 style={{ marginBottom: '12px' }}>
+                {activeTab === 'invoices' ? 'Saved Invoices' : activeTab === 'medicines' ? 'Medicines Directory' : activeTab === 'patients' ? 'Patient Profiles' : 'Business Insights'}
+              </h2>
+              
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                 {activeTab === 'invoices' && (
                   <button className="btn btn-sm btn-muted" onClick={() => window.open(`${API_BASE}/api/export/bills`, '_blank')}>
                     ↓ Export CSV
@@ -330,15 +330,16 @@ function Records() {
                 )}
               </div>
             </div>
+
             {activeTab !== 'analytics' && !selectedPatient && (
-              <div style={{ width: '300px', flexGrow: 1, maxWidth: '400px' }}>
+              <div style={{ width: '100%', flex: '1 1 300px', maxWidth: '400px', marginTop: '4px' }}>
               {activeTab === 'invoices' ? (
                 <input 
                   type="text" 
                   placeholder="Search by Bill No or Patient Name..." 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  style={{ padding: '10px', width: '100%', borderRadius: '4px', border: '1px solid #ccc' }}
+                  style={{ padding: '0 14px', height: '42px', width: '100%', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
                 />
               ) : activeTab === 'patients' ? (
                 <input 
@@ -346,7 +347,7 @@ function Records() {
                   placeholder="Search Patient Name or Mobile..." 
                   value={patSearch}
                   onChange={(e) => setPatSearch(e.target.value)}
-                  style={{ padding: '10px', width: '100%', borderRadius: '4px', border: '1px solid #ccc' }}
+                  style={{ padding: '0 14px', height: '42px', width: '100%', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
                 />
               ) : (
                 <input 
@@ -354,7 +355,7 @@ function Records() {
                   placeholder="Search Medicine Name..." 
                   value={medSearch}
                   onChange={(e) => setMedSearch(e.target.value)}
-                  style={{ padding: '10px', width: '100%', borderRadius: '4px', border: '1px solid #ccc' }}
+                  style={{ padding: '0 14px', height: '42px', width: '100%', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
                 />
               )}
             </div>
