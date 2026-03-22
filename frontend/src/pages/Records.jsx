@@ -269,12 +269,12 @@ function Records() {
       <main className="container">
         
         {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <div className="tab-nav-container" style={{ display: 'flex', gap: '10px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '6px' }}>
           <button 
             className={`btn ${activeTab === 'analytics' ? 'btn-primary' : 'btn-muted'}`} 
             onClick={() => { setActiveTab('analytics'); setSelectedPatient(null); }}
           >
-            Analytics & Alerts
+            Analytics
           </button>
           <button 
             className={`btn ${activeTab === 'invoices' ? 'btn-primary' : 'btn-muted'}`} 
@@ -394,17 +394,17 @@ function Records() {
                             <table style={{ minWidth: '100%' }}>
                               <thead>
                                 <tr>
-                                  <th style={{ background: 'transparent', paddingLeft: 0 }}>Bill No</th>
+                                  <th style={{ background: 'transparent' }}>Bill No</th>
                                   <th style={{ background: 'transparent' }}>Patient</th>
-                                  <th style={{ background: 'transparent', textAlign: 'right', paddingRight: 0 }}>Amount</th>
+                                  <th style={{ background: 'transparent' }}>Amount</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {analytics.recentBills.map(b => (
                                   <tr key={b._id}>
-                                    <td data-label="Bill No" style={{ paddingLeft: 0, borderTop: '1px solid #e2e8f0' }}>{b.billNo}</td>
+                                    <td data-label="Bill No" style={{ borderTop: '1px solid #e2e8f0' }}>{b.billNo}</td>
                                     <td data-label="Patient" style={{ borderTop: '1px solid #e2e8f0' }}>{b.patientName || 'Walk-in'}</td>
-                                    <td data-label="Amount" style={{ fontWeight: 600, textAlign: 'right', paddingRight: 0, borderTop: '1px solid #e2e8f0', color: '#15803d' }}>₹ {b.finalTotal}</td>
+                                    <td data-label="Amount" style={{ fontWeight: 600, borderTop: '1px solid #e2e8f0', color: '#15803d' }}>₹ {b.finalTotal}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -422,15 +422,15 @@ function Records() {
                             <table style={{ minWidth: '100%' }}>
                               <thead>
                                 <tr>
-                                  <th style={{ background: 'transparent', paddingLeft: 0 }}>Medicine</th>
-                                  <th style={{ background: 'transparent', textAlign: 'right', paddingRight: 0 }}>Units Sold</th>
+                                  <th style={{ background: 'transparent' }}>Medicine</th>
+                                  <th style={{ background: 'transparent' }}>Units Sold</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {analytics.topMedicines.map((m, i) => (
                                   <tr key={i}>
-                                    <td data-label="Medicine" style={{ paddingLeft: 0, borderTop: '1px solid #e2e8f0' }}><strong>{m._id || 'Unknown'}</strong></td>
-                                    <td data-label="Units Sold" style={{ textAlign: 'right', paddingRight: 0, borderTop: '1px solid #e2e8f0', color: '#2563eb', fontWeight: 600 }}>{m.totalSold} Units</td>
+                                    <td data-label="Medicine" style={{ borderTop: '1px solid #e2e8f0' }}><strong>{m._id || 'Unknown'}</strong></td>
+                                    <td data-label="Units Sold" style={{ borderTop: '1px solid #e2e8f0', color: '#2563eb', fontWeight: 600 }}>{m.totalSold} Units</td>
                                   </tr>
                                 ))}
                               </tbody>
