@@ -32,15 +32,32 @@ async function generatePDF(req, res) {
     if (mongoose.connection.readyState === 1 && data.patientName) {
       try {
         let patient = false;
-        if (data.patientMobile) {
-           patient = await Patient.findOne({ phone: data.patientMobile });
+        const pName = data.patientName ? data.patientName.trim() : "";
+        const pMobile = data.patientMobile ? data.patientMobile.trim() : "";
+        const pAddress = data.patientAddress ? data.patientAddress.trim() : "";
+
+        if (pMobile) {
+           patient = await Patient.findOne({ phone: pMobile });
         }
         if (!patient) {
           patient = await Patient.create({
-            name: data.patientName,
-            phone: data.patientMobile || "",
-            address: data.patientAddress || ""
+            name: pName,
+            phone: pMobile,
+            address: pAddress
           });
+        } else {
+          let updated = false;
+          if (pName && patient.name !== pName) {
+            patient.name = pName;
+            updated = true;
+          }
+          if (pAddress && patient.address !== pAddress) {
+            patient.address = pAddress;
+            updated = true;
+          }
+          if (updated) {
+            await patient.save();
+          }
         }
 
         const invoiceNumber = data.billNo || `INV-${Date.now()}`;
