@@ -190,6 +190,25 @@ function Records() {
     } catch(e) { console.error(e) }
   };
 
+  const handlePatDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete patient: ${name}?`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/patients/${id}`, { method: 'DELETE', credentials: 'include' });
+      if (res.ok) {
+        if (selectedPatient && selectedPatient._id === id) {
+          setSelectedPatient(null);
+          setPatientHistory(null);
+        }
+        fetchPatients();
+      } else {
+        alert("Failed to delete patient.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error deleting patient.");
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'patients' && !selectedPatient) fetchPatients();
   }, [patSearch, activeTab, selectedPatient]);
@@ -571,8 +590,11 @@ function Records() {
                            <td data-label="Address">{p.address || '-'}</td>
                            <td data-label="Created On">{new Date(p.createdAt).toLocaleDateString('en-GB')}</td>
                            <td data-label="Action">
-                              <button className="btn btn-sm btn-primary" onClick={() => { setSelectedPatient(p); loadPatientHistory(p._id); }}>
+                              <button className="btn btn-sm btn-primary" onClick={() => { setSelectedPatient(p); loadPatientHistory(p._id); }} style={{ marginRight: '8px' }}>
                                 View History
+                              </button>
+                              <button className="btn btn-sm btn-danger" onClick={() => handlePatDelete(p._id, p.name)}>
+                                Delete
                               </button>
                            </td>
                         </tr>

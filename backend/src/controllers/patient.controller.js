@@ -30,12 +30,7 @@ const getPatients = async (req, res) => {
       }
     });
 
-    // Only keep patients with at least 1 bill
-    pipeline.push({
-      $match: {
-        bills: { $ne: [] }
-      }
-    });
+    // Get all patients regardless of whether they have a bill or not
 
     // Remove the large bills array from the payload, we just needed it for filtering
     pipeline.push({
@@ -79,7 +74,25 @@ const getPatientHistory = async (req, res) => {
   }
 };
 
+// @desc    Delete a patient
+// @route   DELETE /api/patients/:id
+// @access  Private
+const deletePatient = async (req, res) => {
+  try {
+    const patient = await Patient.findByIdAndDelete(req.params.id);
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    // Optionally delete associated bills. We will leave bills as they are for accounting.
+    res.json({ message: 'Patient deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete patient' });
+  }
+};
+
 module.exports = {
   getPatients,
-  getPatientHistory
+  getPatientHistory,
+  deletePatient
 };
