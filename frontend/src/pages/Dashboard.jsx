@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../components/Toast.jsx';
+import { useDarkMode } from '../hooks/useDarkMode.js';
 
 const API_BASE =
   (typeof window !== 'undefined' && window.__API_BASE__) ||
@@ -71,6 +73,8 @@ function computeAmount(item) {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const { dark, toggle: toggleDark } = useDarkMode();
   const [form, setForm] = useState(() => {
     const saved = sessionStorage.getItem('invoice_form');
     if (saved) {
@@ -266,7 +270,22 @@ function Dashboard() {
 
   const handleGenerate = async () => {
     if (!form.billNo || !form.billNo.trim()) {
-      alert('Bill No is required to generate PDF. Please enter it above.');
+      toast.warning('Bill No is required to generate PDF. Please enter it above.');
+      return;
+    }
+    // Check for negative stock — block billing entirely
+    const overStockItems = items.filter(item => {
+      if (!item.productName || item.productName.trim() === '') return false;
+      const qty = Number(item.quantity) || 0;
+      if (qty <= 0) return false;
+      // If stock info is available, check it
+      if (typeof item.stock === 'number' && !isNaN(item.stock)) {
+        return qty > item.stock;
+      }
+      return false;
+    });
+    if (overStockItems.length > 0) {
+      toast.error(`Stock insufficient for: ${overStockItems.map(i => `${i.productName} (Available: ${i.stock}, Requested: ${i.quantity})`).join(', ')}`);
       return;
     }
     setGenerating(true);
@@ -290,6 +309,7 @@ function Dashboard() {
       }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        toast.error(err.error || 'PDF generation failed');
         throw new Error(err.error || 'PDF generation failed');
       }
 
@@ -308,7 +328,7 @@ function Dashboard() {
 
       setShowPdfPopup(true);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setGenerating(false);
     }
@@ -349,6 +369,7 @@ function Dashboard() {
 
   const handleReset = (force = false) => {
     if (!force && !window.confirm('Reset all fields?')) return;
+    toast.info('Form reset successfully');
     setForm(getDefaultForm());
     setItems(Array.from({ length: 5 }, () => blankItem()));
     setPdfUrl(null);
@@ -370,6 +391,13 @@ function Dashboard() {
           </div>
         </div>
         <div className="toolbar-right">
+          <button 
+            className={`dark-mode-toggle ${dark ? 'active' : ''}`} 
+            onClick={toggleDark} 
+            title={dark ? 'Light Mode' : 'Dark Mode'}
+          >
+            <span className="toggle-knob">{dark ? '🌙' : '☀️'}</span>
+          </button>
           <button className="btn btn-store" onClick={() => navigate('/')}>
             Dashboard
           </button>
@@ -757,6 +785,17 @@ function Dashboard() {
                 </svg>
                 Download PDF
               </a>
+
+              <button className="pdf-btn-new" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} onClick={() => {
+                if (pdfUrl) {
+                  const printWindow = window.open(pdfUrl, '_blank');
+                  if (printWindow) {
+                    printWindow.addEventListener('load', () => printWindow.print());
+                  }
+                }
+              }}>
+                🖨️ Print Invoice
+              </button>
               <button className="pdf-btn-new" onClick={() => { setShowPdfPopup(false); setPdfUrl(null); setPdfBlob(null); }}>
                 Create New Bill
               </button>

@@ -79,6 +79,29 @@ async function generatePDF(req, res) {
         });
         
         const allMedicineNames = new Set([...Object.keys(oldStockMap), ...Object.keys(newStockMap)]);
+        
+        // --- Validate stock won't go negative ---
+        const insufficientStock = [];
+        for (const medName of allMedicineNames) {
+           const oldQ = oldStockMap[medName] || 0;
+           const newQ = newStockMap[medName] || 0;
+           const diff = newQ - oldQ;
+           if (diff > 0) {
+              const med = await Medicine.findOne({ name: new RegExp(`^${medName}$`, 'i') });
+              if (med && typeof med.stock === 'number') {
+                 if (med.stock < diff) {
+                    insufficientStock.push({ name: medName, available: med.stock, requested: newQ });
+                 }
+              }
+           }
+        }
+        if (insufficientStock.length > 0) {
+           return res.status(400).json({
+              error: `Stock insufficient for: ${insufficientStock.map(i => `${i.name} (Available: ${i.available}, Requested: ${i.requested})`).join(', ')}`
+           });
+        }
+        // --- End validation ---
+        
         for (const medName of allMedicineNames) {
            const oldQ = oldStockMap[medName] || 0;
            const newQ = newStockMap[medName] || 0;

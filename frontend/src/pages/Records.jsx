@@ -1,13 +1,45 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../components/Toast.jsx';
+import CountUp from '../components/CountUp.jsx';
+import { SkeletonTable, SkeletonCard } from '../components/Skeleton.jsx';
+import EmptyState from '../components/EmptyState.jsx';
+import { useDarkMode } from '../hooks/useDarkMode.js';
 
 const API_BASE =
   (typeof window !== 'undefined' && window.__API_BASE__) ||
   "https://anubhav-billing-1jso.onrender.com";
 
+// Helper: classify medicine expiry
+function getExpiryClass(exp) {
+  if (!exp) return '';
+  const parts = exp.split('/');
+  if (parts.length !== 2) return '';
+  const month = parseInt(parts[0], 10);
+  const year = parseInt(parts[1], 10);
+  if (!month || !year) return '';
+  const fullYear = year < 100 ? 2000 + year : year;
+  const expiryDate = new Date(fullYear, month, 0); // last day of that month
+  const now = new Date();
+  const threeMonths = new Date();
+  threeMonths.setMonth(threeMonths.getMonth() + 3);
+  if (expiryDate < now) return 'expiry-expired';
+  if (expiryDate <= threeMonths) return 'expiry-warning';
+  return 'expiry-ok';
+}
+
+function getExpiryLabel(exp) {
+  const cls = getExpiryClass(exp);
+  if (cls === 'expiry-expired') return ' ⛔ Expired';
+  if (cls === 'expiry-warning') return ' ⚠️ Expiring Soon';
+  return '';
+}
+
 function Records() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('analytics'); // 'invoices' | 'medicines'
+  const toast = useToast();
+  const { dark, toggle: toggleDark } = useDarkMode();
+  const [activeTab, setActiveTab] = useState('analytics');
 
   // --- Invoices State & Logic ---
   const [bills, setBills] = useState([]);
@@ -50,13 +82,14 @@ function Records() {
         credentials: 'include'
       });
       if (res.ok) {
+        toast.success(`Bill ${billNo} deleted successfully`);
         fetchBills();
       } else {
-        alert("Failed to delete bill.");
+        toast.error("Failed to delete bill.");
       }
     } catch (e) {
       console.error(e);
-      alert("Error deleting bill.");
+      toast.error("Error deleting bill.");
     }
   };
 
@@ -118,7 +151,69 @@ function Records() {
       navigate('/billing');
     } catch (e) {
       console.error(e);
-      alert("Error loading bill for edit.");
+      toast.error("Error loading bill for edit.");
+    }
+  };
+
+  // --- Duplicate Bill ---
+  const handleDuplicate = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/bills/${id}`, { credentials: 'include' });
+      if (!res.ok) throw new Error("Failed to load bill details");
+      const bill = await res.json();
+
+      const form = {
+        storeName: 'KRISHNA MEDICAL STORE',
+        storeTagline: 'Shop No. CP-1, LGF-22, Jeevan Plaza',
+        storeAddress: 'Vipul Khand-2, Gomti Nagar, Lucknow - 226010',
+        storePhone: 'Phone: +91 9559953132',
+        storeEmail: 'Email: krishnamedicalstoregtl@gmail.com',
+        gstin: '09FICPP4622N1ZR',
+        drugLicense1: 'UP32200005490',
+        drugLicense2: 'UP32210005485',
+        billNo: '', // New bill number will be auto-fetched
+        billDate: (() => {
+          const now = new Date();
+          const dd = String(now.getDate()).padStart(2, '0');
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const yyyy = now.getFullYear();
+          return `${dd}/${mm}/${yyyy}`;
+        })(),
+        patientName: bill.patient?.name || '',
+        patientAddress: bill.patient?.address || '',
+        patientMobile: bill.patient?.phone || '',
+        doctorName: bill.doctorName || '',
+        prescription: bill.prescription || '',
+        footerNote: ''
+      };
+
+      const blankItem = () => ({
+        productName: '', packing: '', batchNo: '', exp: '', quantity: '', mrp: '', discount: '', amount: '', manual: false
+      });
+
+      let items = (bill.items || [])
+        .filter(item => item.name && item.name.trim().toLowerCase() !== 'item')
+        .map(item => ({
+        productName: item.name || '',
+        packing: item.packing || '',
+        batchNo: item.batchNo || '',
+        exp: item.exp || '',
+        quantity: item.quantity || '',
+        mrp: item.mrp || item.price || '',
+        discount: item.discount || '',
+        amount: item.total || '',
+        manual: false
+      }));
+
+      while (items.length < 5) items.push(blankItem());
+
+      sessionStorage.setItem('invoice_form', JSON.stringify(form));
+      sessionStorage.setItem('invoice_items', JSON.stringify(items));
+      toast.info('Bill duplicated! Redirecting to billing...');
+      setTimeout(() => navigate('/billing'), 500);
+    } catch (e) {
+      console.error(e);
+      toast.error("Error duplicating bill.");
     }
   };
 
@@ -127,9 +222,9 @@ function Records() {
   const [medLoading, setMedLoading] = useState(false);
   const [medSearch, setMedSearch] = useState("");
   const [editingMed, setEditingMed] = useState(null);
+  const [medTotal, setMedTotal] = useState(0);
   const [medPage, setMedPage] = useState(1);
   const [medTotalPages, setMedTotalPages] = useState(1);
-
   const fetchMedicines = async () => {
     setMedLoading(true);
     try {
@@ -137,6 +232,7 @@ function Records() {
       if (res.ok) {
         const data = await res.json();
         setMedicines(data.data || data);
+        setMedTotal(data.total || 0);
         setMedTotalPages(data.totalPages || 1);
       }
     } catch (e) {
@@ -199,13 +295,14 @@ function Records() {
           setSelectedPatient(null);
           setPatientHistory(null);
         }
+        toast.success(`Patient "${name}" deleted`);
         fetchPatients();
       } else {
-        alert("Failed to delete patient.");
+        toast.error("Failed to delete patient.");
       }
     } catch (e) {
       console.error(e);
-      alert("Error deleting patient.");
+      toast.error("Error deleting patient.");
     }
   };
 
@@ -217,8 +314,12 @@ function Records() {
     if (!window.confirm(`Are you sure you want to delete medicine: ${name}?`)) return;
     try {
       const res = await fetch(`${API_BASE}/api/medicines/${id}`, { method: 'DELETE', credentials: 'include' });
-      if (res.ok) fetchMedicines();
-      else alert("Failed to delete medicine.");
+      if (res.ok) {
+        toast.success(`Medicine "${name}" deleted`);
+        fetchMedicines();
+      } else {
+        toast.error("Failed to delete medicine.");
+      }
     } catch (e) {
       console.error(e);
     }
@@ -244,14 +345,15 @@ function Records() {
         });
       }
       if (res.ok) {
+        toast.success(editingMed._id ? 'Medicine updated!' : 'Medicine added!');
         setEditingMed(null);
         fetchMedicines();
       } else {
-        alert("Failed to save medicine.");
+        toast.error("Failed to save medicine.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error saving medicine.");
+      toast.error("Error saving medicine.");
     }
   };
 
@@ -268,16 +370,19 @@ function Records() {
   return (
     <div>
       <header className="toolbar">
-        <div className="brand">
+        <div className="brand" style={{ flexShrink: 1, minWidth: 0 }}>
           <img src="/Anubhav.png" alt="Anubhav Billing logo" className="brand-logo" />
-          <div className="brand-text">
-            <h1>Dashboard</h1>
-            <p>Overview & Management</p>
+          <div className="brand-text" style={{ overflow: 'hidden' }}>
+            <h1 style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>Anubhav Billing</h1>
           </div>
         </div>
-        <div className="toolbar-right" style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-primary" onClick={() => navigate('/billing')}>
-            + New Bill
+        <div className="toolbar-right" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+          <button 
+            className={`dark-mode-toggle ${dark ? 'active' : ''}`} 
+            onClick={toggleDark} 
+            title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            <span className="toggle-knob">{dark ? '🌙' : '☀️'}</span>
           </button>
           <button className="btn btn-muted" onClick={handleLogout}>
             Logout
@@ -293,36 +398,36 @@ function Records() {
             className={`btn ${activeTab === 'analytics' ? 'btn-primary' : 'btn-muted'}`} 
             onClick={() => { setActiveTab('analytics'); setSelectedPatient(null); }}
           >
-            Analytics
+            📊 Analytics
           </button>
           <button 
             className={`btn ${activeTab === 'invoices' ? 'btn-primary' : 'btn-muted'}`} 
             onClick={() => { setActiveTab('invoices'); setSelectedPatient(null); }}
           >
-            Invoices
+            🧾 Invoices
           </button>
           <button 
             className={`btn ${activeTab === 'medicines' ? 'btn-primary' : 'btn-muted'}`} 
             onClick={() => { setActiveTab('medicines'); setSelectedPatient(null); }}
           >
-            Medicines DB
+            💊 Inventory
           </button>
           <button 
             className={`btn ${activeTab === 'patients' ? 'btn-primary' : 'btn-muted'}`} 
             onClick={() => setActiveTab('patients')}
           >
-            Patient History
+            👤 Patient History
           </button>
         </div>
 
         <section className="card">
-          <div className="section-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px', marginBottom: '24px' }}>
-            <div style={{ flex: '1 1 auto', minWidth: 'min-content' }}>
-              <p className="eyebrow" style={{ marginBottom: '4px' }}>
+          <div className="section-head" style={{ marginBottom: '6px' }}>
+            <div style={{ marginBottom: '6px' }}>
+              <p className="eyebrow" style={{ marginBottom: '2px' }}>
                 {activeTab === 'invoices' ? 'Records' : activeTab === 'medicines' ? 'Inventory' : activeTab === 'patients' ? 'CRM' : 'Overview'}
               </p>
-              <h2 style={{ marginBottom: '12px' }}>
-                {activeTab === 'invoices' ? 'Saved Invoices' : activeTab === 'medicines' ? 'Medicines Directory' : activeTab === 'patients' ? 'Patient Profiles' : 'Business Insights'}
+              <h2 style={{ marginBottom: '6px' }}>
+                {activeTab === 'invoices' ? 'Saved Invoices' : activeTab === 'medicines' ? `Medicine Inventory (${medTotal})` : activeTab === 'patients' ? 'Patient Profiles' : 'Business Insights'}
               </h2>
               
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -351,31 +456,32 @@ function Records() {
             </div>
 
             {activeTab !== 'analytics' && !selectedPatient && (
-              <div style={{ width: '100%', flex: '1 1 300px', maxWidth: '400px', marginTop: '4px' }}>
+              <div style={{ width: '100%', maxWidth: '400px', marginTop: '0px' }}>
               {activeTab === 'invoices' ? (
                 <input 
                   type="text" 
-                  placeholder="Search by Bill No or Patient Name..." 
+                  placeholder="🔍 Search..." 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  style={{ padding: '0 14px', height: '42px', width: '100%', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
+                  style={{ padding: '0 12px', height: '38px', width: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)', fontSize: '14px' }}
                 />
               ) : activeTab === 'patients' ? (
                 <input 
                   type="text" 
-                  placeholder="Search Patient Name or Mobile..." 
+                  placeholder="🔍 Search..." 
                   value={patSearch}
                   onChange={(e) => setPatSearch(e.target.value)}
-                  style={{ padding: '0 14px', height: '42px', width: '100%', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
+                  style={{ padding: '0 12px', height: '38px', width: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)', fontSize: '14px' }}
                 />
               ) : (
                 <input 
                   type="text" 
-                  placeholder="Search Medicine Name..." 
+                  placeholder="🔍 Search..." 
                   value={medSearch}
-                  onChange={(e) => setMedSearch(e.target.value)}
-                  style={{ padding: '0 14px', height: '42px', width: '100%', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
+                  onChange={(e) => { setMedSearch(e.target.value); setMedPage(1); }}
+                  style={{ padding: '0 12px', height: '38px', width: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)', fontSize: '14px' }}
                 />
+
               )}
             </div>
             )}
@@ -384,25 +490,53 @@ function Records() {
           <div className="table-wrap" style={{ border: activeTab === 'analytics' ? 'none' : undefined, boxShadow: activeTab === 'analytics' ? 'none' : undefined }}>
             {/* Analytics Tab */}
             {activeTab === 'analytics' && (
-              <div style={{ padding: '20px 0' }}>
-                {anLoading || !analytics ? <p style={{ textAlign: 'center' }}>Loading Analytics...</p> : (
+              <div className="animate-fade-in-up" style={{ padding: '20px 0' }}>
+                {anLoading || !analytics ? (
+                  <div className="grid grid-3" style={{ marginBottom: '40px' }}>
+                    <SkeletonCard /><SkeletonCard /><SkeletonCard />
+                  </div>
+                ) : (
                   <>
-                    <div className="grid grid-3" style={{ marginBottom: '40px' }}>
-                      <div className="card" style={{ background: 'linear-gradient(135deg, rgba(239, 246, 255, 0.7), rgba(219, 234, 254, 0.7))', border: '1px solid rgba(255, 255, 255, 0.6)', margin: 0 }}>
+
+
+                    {/* Revenue Cards with CountUp */}
+                    <div className="grid grid-3" style={{ marginBottom: '20px' }}>
+                      <div className="card stat-card" style={{ background: 'linear-gradient(135deg, rgba(239, 246, 255, 0.7), rgba(219, 234, 254, 0.7))', border: '1px solid rgba(255, 255, 255, 0.6)', margin: 0 }}>
                         <p className="eyebrow" style={{ color: '#1d4ed8' }}>Today's Revenue</p>
-                        <h2 style={{ fontSize: '28px', margin: '14px 0 8px', color: '#1e3a8a' }}>₹ {analytics.revenue.today.toFixed(2)}</h2>
+                        <h2 style={{ fontSize: '28px', margin: '14px 0 8px', color: '#1e3a8a' }}>
+                          ₹ <CountUp end={analytics.revenue.today} />
+                        </h2>
                         <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 600 }}>{analytics.revenue.todayCount} Bills</span>
                       </div>
-                      <div className="card" style={{ background: 'linear-gradient(135deg, rgba(240, 253, 244, 0.7), rgba(220, 252, 227, 0.7))', border: '1px solid rgba(255, 255, 255, 0.6)', margin: 0 }}>
+                      <div className="card stat-card" style={{ background: 'linear-gradient(135deg, rgba(240, 253, 244, 0.7), rgba(220, 252, 227, 0.7))', border: '1px solid rgba(255, 255, 255, 0.6)', margin: 0 }}>
                         <p className="eyebrow" style={{ color: '#15803d' }}>This Month</p>
-                        <h2 style={{ fontSize: '28px', margin: '14px 0 8px', color: '#14532d' }}>₹ {analytics.revenue.month.toFixed(2)}</h2>
+                        <h2 style={{ fontSize: '28px', margin: '14px 0 8px', color: '#14532d' }}>
+                          ₹ <CountUp end={analytics.revenue.month} />
+                        </h2>
                         <span style={{ fontSize: '13px', color: '#22c55e', fontWeight: 600 }}>{analytics.revenue.monthCount} Bills</span>
                       </div>
-                      <div className="card" style={{ background: 'linear-gradient(135deg, rgba(250, 245, 255, 0.7), rgba(243, 232, 255, 0.7))', border: '1px solid rgba(255, 255, 255, 0.6)', margin: 0 }}>
+                      <div className="card stat-card" style={{ background: 'linear-gradient(135deg, rgba(250, 245, 255, 0.7), rgba(243, 232, 255, 0.7))', border: '1px solid rgba(255, 255, 255, 0.6)', margin: 0 }}>
                         <p className="eyebrow" style={{ color: '#7e22ce' }}>All Time Revenue</p>
-                        <h2 style={{ fontSize: '28px', margin: '14px 0 8px', color: '#581c87' }}>₹ {analytics.revenue.allTime.toFixed(2)}</h2>
+                        <h2 style={{ fontSize: '28px', margin: '14px 0 8px', color: '#581c87' }}>
+                          ₹ <CountUp end={analytics.revenue.allTime} />
+                        </h2>
                       </div>
                     </div>
+
+                    {/* Low Stock Alert Card */}
+                    {analytics.lowStock && analytics.lowStock.length > 0 && (
+                      <div className="low-stock-card" style={{ marginBottom: '16px' }}>
+                        <h3 style={{ margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px' }}>
+                          <span>🚨</span> Low Stock Alert
+                        </h3>
+                        {analytics.lowStock.map((med, i) => (
+                          <div key={i} className="low-stock-item">
+                            <strong>{med.name}</strong>
+                            <span className="low-stock-badge">Stock: {med.stock}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     
                     <div className="grid grid-2" style={{ gap: '24px' }}>
                       <div className="card" style={{ margin: 0, padding: '20px' }}>
@@ -430,7 +564,7 @@ function Records() {
                               </tbody>
                             </table>
                           </div>
-                        ) : <p style={{ color: '#64748b', fontSize: '14px' }}>No recent transactions found.</p>}
+                        ) : <EmptyState type="invoices" title="No transactions yet" message="Bills will appear here once created." />}
                       </div>
 
                       <div className="card" style={{ margin: 0, padding: '20px' }}>
@@ -456,7 +590,7 @@ function Records() {
                               </tbody>
                             </table>
                           </div>
-                        ) : <p style={{ color: '#64748b', fontSize: '14px' }}>No sales data yet.</p>}
+                        ) : <EmptyState type="medicines" title="No sales data" message="Start billing to see top medicines." />}
                       </div>
                     </div>
                   </>
@@ -467,11 +601,11 @@ function Records() {
             {/* Invoices Table */}
             {activeTab === 'invoices' && (
               loading ? (
-                <p style={{ padding: '20px', textAlign: 'center' }}>Loading records...</p>
+                <div style={{ padding: '10px' }}><SkeletonTable rows={5} cols={6} /></div>
               ) : bills.length === 0 ? (
-                <p style={{ padding: '20px', textAlign: 'center' }}>No invoices found.</p>
+                <EmptyState type="invoices" title="No invoices found" message="Create your first bill to see it here." />
               ) : (
-                <div>
+                <div className="animate-fade-in-up">
                   <table>
                     <thead>
                     <tr>
@@ -491,9 +625,12 @@ function Records() {
                         <td data-label="Patient Name">{bill.patient?.name || 'Unknown'}</td>
                         <td data-label="Mobile">{bill.patient?.phone || '-'}</td>
                         <td data-label="Amount">₹ {bill.finalTotal?.toFixed(2) || '0.00'}</td>
-                        <td style={{ display: 'flex', gap: '8px' }}>
+                        <td style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                           <button className="btn btn-sm btn-primary" onClick={() => handleEdit(bill._id)} style={{ flex: 1, margin: 0 }}>
-                            Edit / View
+                            Edit
+                          </button>
+                          <button className="btn btn-sm btn-muted" onClick={() => handleDuplicate(bill._id)} title="Duplicate this bill" style={{ flex: 1, margin: 0 }}>
+                            📋 Copy
                           </button>
                           <button className="btn btn-sm btn-danger" onClick={() => handleDelete(bill._id, bill.invoiceNumber)} style={{ flex: 1, margin: 0 }}>
                             Delete
@@ -514,14 +651,14 @@ function Records() {
               )
             )}
 
-            {/* Medicines Table */}
+            {/* Medicines Table with Expiry Tracking */}
             {activeTab === 'medicines' && (
               medLoading ? (
-                <p style={{ padding: '20px', textAlign: 'center' }}>Loading medicines...</p>
+                <div style={{ padding: '10px' }}><SkeletonTable rows={5} cols={7} /></div>
               ) : medicines.length === 0 ? (
-                <p style={{ padding: '20px', textAlign: 'center' }}>No medicines found.</p>
+                <EmptyState type="medicines" title="No medicines found" message="Add medicines to your directory." />
               ) : (
-                <div>
+                <div className="animate-fade-in-up">
                   <table>
                     <thead>
                     <tr>
@@ -541,8 +678,16 @@ function Records() {
                         <td data-label="Price">₹ {med.price}</td>
                         <td data-label="Packing">{med.packing || '-'}</td>
                         <td data-label="Batch No">{med.batchNo || '-'}</td>
-                        <td data-label="Expiry">{med.exp || '-'}</td>
-                        <td data-label="Stock">{med.stock || 0}</td>
+                        <td data-label="Expiry">
+                          <span className={getExpiryClass(med.exp)}>
+                            {med.exp || '-'}{getExpiryLabel(med.exp)}
+                          </span>
+                        </td>
+                        <td data-label="Stock">
+                          <span className={med.stock && med.stock < 20 ? 'stock-low' : 'stock-ok'}>
+                            {med.stock || 0}
+                          </span>
+                        </td>
                         <td style={{ display: 'flex', gap: '8px' }}>
                           <button className="btn btn-sm btn-primary" onClick={() => setEditingMed(med)} style={{ flex: 1, margin: 0 }}>
                             Edit
@@ -568,10 +713,11 @@ function Records() {
             {/* Patients Table */}
             {activeTab === 'patients' && !selectedPatient && (
                patLoading ? (
-                <p style={{ padding: '20px', textAlign: 'center' }}>Loading patients...</p>
+                <div style={{ padding: '10px' }}><SkeletonTable rows={5} cols={5} /></div>
               ) : patients.length === 0 ? (
-                <p style={{ padding: '20px', textAlign: 'center' }}>No patients found.</p>
+                <EmptyState type="patients" title="No patients found" message="Patients will appear here after billing." />
               ) : (
+                <div className="animate-fade-in-up">
                 <table>
                   <thead>
                      <tr>
@@ -601,12 +747,13 @@ function Records() {
                      ))}
                   </tbody>
                 </table>
+                </div>
               )
             )}
 
             {/* Patient History View */}
             {activeTab === 'patients' && selectedPatient && patientHistory && (
-               <div style={{ padding: '0 10px 20px' }}>
+               <div className="animate-fade-in-up" style={{ padding: '0 10px 20px' }}>
                   <div className="card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
                       <p className="eyebrow" style={{ color: '#64748b' }}>Profile Info</p>
@@ -617,13 +764,13 @@ function Records() {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <p className="eyebrow" style={{ color: '#10b981' }}>Lifetime Value</p>
-                      <h2 style={{ fontSize: '28px', color: '#047857', margin: 0 }}>₹ {patientHistory.totalSpent.toFixed(2)}</h2>
+                      <h2 style={{ fontSize: '28px', color: '#047857', margin: 0 }}>₹ <CountUp end={patientHistory.totalSpent} /></h2>
                     </div>
                   </div>
 
                   <h3 style={{ margin: '20px 0 15px' }}>Billing & Prescription History</h3>
                   
-                  {patientHistory.history.length === 0 ? <p>No previous bills found.</p> : (
+                  {patientHistory.history.length === 0 ? <EmptyState type="invoices" title="No bills yet" message="No previous bills found for this patient." /> : (
                     patientHistory.history.map(bill => (
                       <div key={bill._id} className="card" style={{ marginBottom: '15px', borderLeft: '4px solid #3b82f6' }}>
                          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px', marginBottom: '10px' }}>
@@ -676,7 +823,7 @@ function Records() {
         <div className="pdf-popup-overlay">
           <div className="pdf-popup-card" style={{ maxWidth: '500px', textAlign: 'left' }}>
             <button className="pdf-popup-close" onClick={() => setEditingMed(null)}>✕</button>
-            <h3 style={{ marginBottom: '20px', fontSize: '1.25rem' }}>Edit Medicine</h3>
+            <h3 style={{ marginBottom: '20px', fontSize: '1.25rem' }}>{editingMed._id ? 'Edit Medicine' : '+ Add New Medicine'}</h3>
             <form onSubmit={handleMedSave} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <label style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', fontWeight: 600 }}>
                 Medicine Name
@@ -748,6 +895,17 @@ function Records() {
           </div>
         </div>
       )}
+
+      {/* Floating Action Button — New Bill */}
+      <button className="fab-new-bill" onClick={() => {
+        sessionStorage.removeItem('invoice_form');
+        sessionStorage.removeItem('invoice_items');
+        navigate('/billing');
+        window.location.reload();
+      }} title="Create New Bill">
+        <span className="fab-icon">+</span>
+        <span className="fab-label">New Bill</span>
+      </button>
 
     </div>
   );

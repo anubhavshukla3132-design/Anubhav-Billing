@@ -8,60 +8,11 @@ const API_BASE =
   (typeof window !== 'undefined' && window.__API_BASE__) ||
   'https://anubhav-billing-1jso.onrender.com';
 
-function useServerStatus() {
-  const [status, setStatus] = useState('checking'); // checking | waiting | ready
-
-  useEffect(() => {
-    let timer;
-    let cancelled = false;
-
-    async function ping() {
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 4000);
-        const res = await fetch(`${API_BASE}/health`, { signal: controller.signal });
-        clearTimeout(timeout);
-        if (!cancelled) setStatus(res.ok ? 'ready' : 'waiting');
-      } catch (_err) {
-        if (!cancelled) setStatus('waiting');
-      }
-
-      if (cancelled) return;
-      // Keep pinging every 2.5s until ready, then every 8s to catch drops.
-      const nextDelay = status === 'ready' ? 8000 : 2500;
-      timer = setTimeout(ping, nextDelay);
-    }
-
-    ping();
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [status]);
-
-  return status;
-}
-
-function WaitingScreen({ message = 'Server is starting, please wait a moment…' }) {
-  return (
-    <div className="server-wait-shell">
-      <div className="server-wait-card">
-        <div className="ping-dot" />
-        <h2>Server is booting</h2>
-        <p>{message}</p>
-        <small>As soon as the server is ready, we’ll take you to the login page.</small>
-      </div>
-    </div>
-  );
-}
-
 function ProtectedRoute({ element: Element }) {
-  const status = useServerStatus();
   const navigate = useNavigate();
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    if (status !== 'ready') return;
     let cancelled = false;
     let retryTimer;
 
@@ -77,7 +28,7 @@ function ProtectedRoute({ element: Element }) {
         setAuthReady(true);
       } catch (_err) {
         if (cancelled) return;
-        // Retry quickly in case server just came up.
+        // Retry quickly in case server is just waking up.
         retryTimer = setTimeout(checkSession, 1500);
       }
     }
@@ -87,21 +38,18 @@ function ProtectedRoute({ element: Element }) {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [status, navigate]);
+  }, [navigate]);
 
-  if (status !== 'ready') return <WaitingScreen />;
-  if (!authReady) return <WaitingScreen message="Checking session…" />;
+  if (!authReady) return null; // Or a very subtle loading indicator
   return <Element />;
 }
 
 function LoginGate() {
-  const status = useServerStatus();
   const navigate = useNavigate();
   const [authChecked, setAuthChecked] = useState(false);
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
-    if (status !== 'ready') return;
     let cancelled = false;
     let retryTimer;
 
@@ -130,11 +78,10 @@ function LoginGate() {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [status, navigate]);
+  }, [navigate]);
 
-  if (status !== 'ready') return <WaitingScreen />;
-  if (!authChecked) return <WaitingScreen message="Checking session…" />;
-  if (authed) return null; // navigate will have triggered
+  if (!authChecked) return null;
+  if (authed) return null; 
   return <Login />;
 }
 

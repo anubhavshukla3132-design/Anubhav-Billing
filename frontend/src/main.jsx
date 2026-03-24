@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
+import { ToastProvider } from './components/Toast.jsx';
 import './styles/style.css';
 import './styles/login.css';
 import { registerSW } from 'virtual:pwa-register';
@@ -9,7 +10,9 @@ import { registerSW } from 'virtual:pwa-register';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
