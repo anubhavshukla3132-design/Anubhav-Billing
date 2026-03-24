@@ -259,9 +259,18 @@ textarea:focus {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
+.line-items-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 .prescription-wrap {
   margin-top: 16px;
 }
+
 
 .actions {
   display: flex;
@@ -604,13 +613,13 @@ tbody td input {
   }
 
   .brand-logo {
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
   }
 
   .brand h1 {
-    font-size: 15px;
+    font-size: 18px;
     letter-spacing: -0.4px;
     white-space: nowrap;
     overflow: hidden;

@@ -84,7 +84,7 @@ function Records() {
         credentials: 'include'
       });
       if (res.ok) {
-        toast.success(`Bill ${billNo} deleted successfully`);
+        toast.error(`Bill ${billNo} deleted`);
         fetchBills();
       } else {
         toast.error("Failed to delete bill.");
@@ -297,7 +297,7 @@ function Records() {
           setSelectedPatient(null);
           setPatientHistory(null);
         }
-        toast.success(`Patient "${name}" deleted`);
+        toast.error(`Patient "${name}" deleted`);
         fetchPatients();
       } else {
         toast.error("Failed to delete patient.");
@@ -317,7 +317,7 @@ function Records() {
     try {
       const res = await fetch(`${API_BASE}/api/medicines/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) {
-        toast.success(`Medicine "${name}" deleted`);
+        toast.error(`Medicine "${name}" deleted`);
         fetchMedicines();
       } else {
         toast.error("Failed to delete medicine.");
@@ -756,19 +756,20 @@ function Records() {
             {/* Patient History View */}
             {activeTab === 'patients' && selectedPatient && patientHistory && (
                <div className="animate-fade-in-up" style={{ padding: '0 10px 20px' }}>
-                  <div className="card" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="card" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <p className="eyebrow" style={{ color: '#64748b' }}>Profile Info</p>
+                      <p className="eyebrow">Profile Info</p>
                       <h3 style={{ margin: '5px 0', fontSize: '20px' }}>{patientHistory.patient.name}</h3>
-                      <p style={{ margin: 0, fontSize: '14px', color: '#475569' }}>
+                      <p style={{ margin: 0, fontSize: '14px' }}>
                         📞 {patientHistory.patient.phone || 'N/A'} &nbsp;|&nbsp; 📍 {patientHistory.patient.address || 'N/A'}
                       </p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <p className="eyebrow" style={{ color: '#10b981' }}>Lifetime Value</p>
-                      <h2 style={{ fontSize: '28px', color: '#047857', margin: 0 }}>₹ <CountUp end={patientHistory.totalSpent} /></h2>
+                      <p className="eyebrow" style={{ color: dark ? '#34d399' : '#10b981' }}>Lifetime Value</p>
+                      <h2 style={{ fontSize: '28px', color: dark ? '#10b981' : '#047857', margin: 0 }}>₹ <CountUp end={patientHistory.totalSpent} /></h2>
                     </div>
                   </div>
+
 
                   <h3 style={{ margin: '20px 0 15px' }}>Billing & Prescription History</h3>
                   
@@ -779,19 +780,19 @@ function Records() {
                             <div>
                                <strong>{bill.invoiceNumber}</strong> &nbsp;|&nbsp; {new Date(bill.createdAt).toLocaleDateString('en-GB')}
                             </div>
-                            <div style={{ fontWeight: 800, color: '#0f172a' }}>
+                            <div style={{ fontWeight: 800 }}>
                                ₹ {bill.finalTotal.toFixed(2)}
                             </div>
                          </div>
                          {bill.doctorName && <p style={{ fontSize: '13px', margin: '0 0 5px' }}><strong>Doctor:</strong> {bill.doctorName}</p>}
-                         {bill.prescription && <p style={{ fontSize: '13px', margin: '0 0 10px', color: '#475569' }}><strong>Rx:</strong> {bill.prescription}</p>}
+                         {bill.prescription && <p style={{ fontSize: '13px', margin: '0 0 10px' }}><strong>Rx:</strong> {bill.prescription}</p>}
                          
                          <table style={{ minWidth: '100%', fontSize: '13px' }}>
                            <thead>
                              <tr>
-                               <th style={{ background: '#f1f5f9', color: '#475569' }}>Medicine</th>
-                               <th style={{ background: '#f1f5f9', color: '#475569' }}>Qty</th>
-                               <th style={{ background: '#f1f5f9', color: '#475569' }}>Price</th>
+                               <th>Medicine</th>
+                               <th>Qty</th>
+                               <th>Price</th>
                              </tr>
                            </thead>
                            <tbody>
