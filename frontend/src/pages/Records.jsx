@@ -648,9 +648,9 @@ function Records() {
                            <tbody>
                              {bill.items.map((item, idx) => (
                                <tr key={idx}>
-                                 <td style={{ padding: '4px 8px' }}>{item.name}</td>
-                                 <td style={{ padding: '4px 8px' }}>{item.quantity}</td>
-                                 <td style={{ padding: '4px 8px' }}>₹ {item.total}</td>
+                                 <td data-label="Medicine" style={{ padding: '4px 8px' }}>{item.name}</td>
+                                 <td data-label="Qty" style={{ padding: '4px 8px' }}>{item.quantity}</td>
+                                 <td data-label="Price" style={{ padding: '4px 8px' }}>₹ {item.total}</td>
                                </tr>
                              ))}
                            </tbody>
