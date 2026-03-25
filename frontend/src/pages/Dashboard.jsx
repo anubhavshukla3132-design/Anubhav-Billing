@@ -385,21 +385,21 @@ function Dashboard() {
   return (
     <div>
       <header className="toolbar">
-        <div className="brand">
-          <img src="/Anubhav.png" alt="Anubhav Billing logo" className="brand-logo" />
-          <div className="brand-text">
-            <h1>Anubhav Billing</h1>
-            <p>VIP Production Build ✨</p>
-          </div>
-        </div>
-        <div className="toolbar-right">
-          <button className="btn btn-store" onClick={() => navigate('/')}>
+        <div className="toolbar-right" style={{ width: '100%', justifyContent: 'space-between', display: 'flex', gap: '10px' }}>
+          <button 
+            className="btn btn-store" 
+            onClick={() => navigate('/')}
+            style={{ flex: 1, padding: '12px', fontSize: '18px', fontWeight: '800', height: 'auto' }}
+          >
             Dashboard
           </button>
-          <button className="btn btn-store" onClick={() => setStorePanelOpen(true)}>
+          <button 
+            className="btn btn-store" 
+            onClick={() => setStorePanelOpen(true)}
+            style={{ flex: 1, padding: '12px', fontSize: '18px', fontWeight: '800', height: 'auto' }}
+          >
             Details
           </button>
-
         </div>
       </header>
 
@@ -412,7 +412,7 @@ function Dashboard() {
               <h3>Store &amp; Bill Details</h3>
             </div>
             <button className="btn btn-muted" onClick={() => setStorePanelOpen(false)}>
-              Close
+              Back
             </button>
           </div>
           <div className="panel-body">
