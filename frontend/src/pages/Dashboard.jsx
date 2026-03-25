@@ -604,11 +604,11 @@ function Dashboard() {
                   <th>Sno</th>
                   <th>Medicine Name</th>
                   <th>Packing</th>
-                  <th>Batch No.</th>
-                  <th>Exp.</th>
+                  <th>Batch No</th>
+                  <th>Exp</th>
                   <th>Quantity</th>
                   <th>M.R.P.</th>
-                  <th>Disc.%</th>
+                  <th>Disc%</th>
                   <th>Amount</th>
                   <th>Action</th>
                 </tr>

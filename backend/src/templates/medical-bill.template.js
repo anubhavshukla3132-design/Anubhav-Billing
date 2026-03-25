@@ -254,11 +254,11 @@ function generateMedicalBillHTML(data) {
                 <div class="meta-line"><span class="meta-label">Dr. Name :</span><span class="meta-value">${esc(data.doctorName || "")}</span></div>
               </div>
               <div class="patient-col">
-                <div class="meta-line wrap"><span class="meta-label">Patient Add. :</span><span class="meta-value">${esc(data.patientAddress || "")}</span></div>
+                <div class="meta-line wrap"><span class="meta-label">Patient Add :</span><span class="meta-value">${esc(data.patientAddress || "")}</span></div>
                 <div class="meta-line"><span class="meta-label">Patient Mobile :</span><span class="meta-value">${esc(data.patientMobile || "")}</span></div>
               </div>
               <div class="bill-meta">
-                <div class="meta-line"><span class="meta-label">BILL NO. :</span><span class="meta-value">${esc(data.billNo || "")}</span></div>
+                <div class="meta-line"><span class="meta-label">BILL NO :</span><span class="meta-value">${esc(data.billNo || "")}</span></div>
                 <div class="meta-line"><span class="meta-label">Date :</span><span class="meta-value">${esc(billDate)}</span></div>
               </div>
             </div>
@@ -269,11 +269,11 @@ function generateMedicalBillHTML(data) {
                   <th class="w-sno">Sr.</th>
                   <th class="w-name">Product Name</th>
                   <th class="w-pack">Packing</th>
-                  <th class="w-batch">Batch No.</th>
-                  <th class="w-exp">Exp.</th>
+                  <th class="w-batch">Batch No</th>
+                  <th class="w-exp">Exp</th>
                   <th class="w-qty">Quantity</th>
                   <th class="w-mrp">M.R.P.</th>
-                  <th class="w-disc">Disc(%)</th>
+                  <th class="w-disc">Disc%</th>
                   <th class="w-amt">Amount</th>
                 </tr>
               </thead>
@@ -430,20 +430,20 @@ function generateMedicalBillHTML(data) {
 
     .meta-line {
       display: grid;
-      grid-template-columns: 122px 1fr;
-      gap: 8px;
+      grid-template-columns: 100px 1fr;
+      gap: 6px;
       align-items: start;
     }
 
     .meta-label {
       font-weight: 700;
       color: #1e1e1e;
+      white-space: nowrap;
     }
 
     .meta-value {
       min-width: 0;
-      overflow: visible;
-      text-overflow: clip;
+      word-wrap: break-word;
       white-space: normal;
     }
 
@@ -464,21 +464,27 @@ function generateMedicalBillHTML(data) {
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      border-bottom: 1px solid #959595;
+      border-bottom: none; /* Let the bottom cells or container handle it */
+      border-left: none;
+      border-right: none;
     }
 
     .items-table th,
     .items-table td {
       border-right: 1px solid #959595;
-      border-left: 1px solid #959595;
-      border-bottom: none;
-      padding: 1px 4px;
-      height: 20px;
+      padding: 2px 4px;
+      height: 22px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
       font-size: 10.5px;
       font-family: "Courier New", Courier, monospace;
+      border-bottom: 1px solid #dcdcdc; /* Subtle row lines */
+    }
+
+    .items-table th:last-child,
+    .items-table td:last-child {
+      border-right: none;
     }
 
     .items-table th {
@@ -515,7 +521,7 @@ function generateMedicalBillHTML(data) {
 
     .bottom-block {
       display: grid;
-      grid-template-columns: 1.7fr 1.1fr 1fr;
+      grid-template-columns: 1.6fr 1fr 1fr;
       min-height: 84px;
       border-top: 1px solid #959595;
     }
