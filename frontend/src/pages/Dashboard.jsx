@@ -393,22 +393,13 @@ function Dashboard() {
           </div>
         </div>
         <div className="toolbar-right">
-          <button 
-            className={`dark-mode-toggle ${dark ? 'active' : ''}`} 
-            onClick={toggleDark} 
-            title={dark ? 'Light Mode' : 'Dark Mode'}
-          >
-            <span className="toggle-knob">{dark ? '🌙' : '☀️'}</span>
-          </button>
           <button className="btn btn-store" onClick={() => navigate('/')}>
             Dashboard
           </button>
           <button className="btn btn-store" onClick={() => setStorePanelOpen(true)}>
             Details
           </button>
-          <button className="btn btn-logout" onClick={handleLogout}>
-            Logout
-          </button>
+
         </div>
       </header>
 
