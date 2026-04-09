@@ -479,7 +479,7 @@ function generateMedicalBillHTML(data) {
       text-overflow: ellipsis;
       font-size: 10.5px;
       font-family: "Courier New", Courier, monospace;
-      border-bottom: 1px solid #dcdcdc; /* Subtle row lines */
+      border-bottom: none;
     }
 
     .items-table th:last-child,
